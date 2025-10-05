@@ -1,0 +1,10 @@
+build/
+managed_components/
+.devcontainer/
+
+*.DS_Store
+*/.cache
+
+.vscode/*
+!.vscode/tasks.json
+!.vscode/extensions.json

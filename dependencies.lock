@@ -1,0 +1,21 @@
+dependencies:
+  cybergear-robotics/icm20948:
+    component_hash: 716f16b9546ba47575023d3b84306b2d5af0de7f62d0332078820923df14eed4
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.2'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 0.1.0
+  idf:
+    source:
+      type: idf
+    version: 5.5.0
+direct_dependencies:
+- cybergear-robotics/icm20948
+- idf
+manifest_hash: f66d50dc09a4484adf0bf1ae6dd3c895d20999808b28e016727fc4419cbd3ed0
+target: esp32s3
+version: 2.0.0

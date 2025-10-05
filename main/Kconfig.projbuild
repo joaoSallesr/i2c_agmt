@@ -1,0 +1,17 @@
+menu "ICM-20948 Example"
+
+    config I2C_MASTER_SCL
+        int "SCL GPIO Num"
+        default 9 if IDF_TARGET_ESP32S3
+        default 9 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2
+        help
+            GPIO number for I2C Master clock line.
+
+    config I2C_MASTER_SDA
+        int "SDA GPIO Num"
+        default 8 if IDF_TARGET_ESP32S3
+        default 8 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2
+        help
+            GPIO number for I2C Master data line.
+
+endmenu
