@@ -17,8 +17,10 @@
 #define CALIBRATION_DELAY_MS 4
 
 #define ACC_SENSITIVITY_16G 2048.0f    // LSB/g for ±16g range
-#define GYRO_SENSITIVITY_250DPS 131.0f // LSB/°/s for ±2000°/s range
+#define GYRO_SENSITIVITY_500DPS 65.5f // LSB/°/s for ±500°/s range
 #define G 9.80665f
+
+const int NUM_GYRO_READS = 5000;
 
 /* i2c bus configuration */
 i2c_config_t conf = {
@@ -44,23 +46,64 @@ void print_agmt(icm20948_agmt_t agmt)
     float acc_y = agmt.acc.axes.y / ACC_SENSITIVITY_16G;
     float acc_z = agmt.acc.axes.z / ACC_SENSITIVITY_16G;
 
-	float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_250DPS;
-    float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_250DPS;
-    float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_250DPS;
-  	/*ESP_LOGI(TAG, "Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+	float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
+    float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_500DPS;
+    float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_500DPS;
+  	ESP_LOGI(TAG, "Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
 		acc_x, acc_y, acc_z,
 		gyr_x, gyr_y, gyr_z
-	);*/
+	);	printf("%f", acc_x);
+	printf(", ");
+	printf("%f", acc_y);
+	printf(", ");
+	printf("%f", acc_z);
+}
 
-	/*ESP_LOGI(TAG, "%.6f, %.6f, %.6f", 
-		acc_x, acc_y, acc_z
-	);*/
+void calibrate_accel(icm20948_agmt_t agmt)
+{
+	float acc_x = agmt.acc.axes.x / ACC_SENSITIVITY_16G;
+    float acc_y = agmt.acc.axes.y / ACC_SENSITIVITY_16G;
+    float acc_z = agmt.acc.axes.z / ACC_SENSITIVITY_16G;
 
 	printf("%f", acc_x);
 	printf(", ");
 	printf("%f", acc_y);
 	printf(", ");
 	printf("%f", acc_z);
+}
+
+void calibrate_gyro(icm20948_agmt_t agmt)
+{
+	float sum_x = 0.0f;
+	float sum_y = 0.0f;
+	float sum_z = 0.0f;
+	int cont = 0;
+
+	for (int i = 0; i < NUM_GYRO_READS; i ++)
+	{
+		float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
+    	float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_500DPS;
+    	float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_500DPS;
+
+		sum_x += gyr_x;
+		sum_y += gyr_y;
+		sum_z += gyr_z;
+
+		cont++;
+		
+    	// Make the WDT happy
+    	if (i % 100 == 0)
+      		vTaskDelay(0);
+
+    	pause();
+	}
+
+
+	float bias_x = (sum_x/NUM_GYRO_READS);
+	float bias_y = (sum_y/NUM_GYRO_READS);
+	float bias_z = (sum_z/NUM_GYRO_READS);
+	
+	printf("    .gyro_bias_offset = {.x = %f, .y = %f, .z = %f}\n", bias_x, bias_y, bias_z);
 }
 
 void app_main(void)
@@ -106,7 +149,7 @@ void app_main(void)
 	// Set full scale ranges for both acc and gyr
 	icm20948_fss_t myfss;
 	myfss.a = GPM_16;   // (icm20948_accel_config_fs_sel_e)
-	myfss.g = DPS_250; // (icm20948_gyro_config_1_fs_sel_e)
+	myfss.g = DPS_500; // (icm20948_gyro_config_1_fs_sel_e)
 
 	// Now wake the sensor up
 	icm20948_sleep(&icm, false);
@@ -122,6 +165,8 @@ void app_main(void)
 
 		if (icm20948_get_agmt(&icm, &agmt) == ICM_20948_STAT_OK) {
 			print_agmt(agmt);
+			//calibrate_accel(agmt);
+			//calibrate_gyro(agmt);
 		} else {
 			ESP_LOGE(TAG, "Uh oh");
 		}        
