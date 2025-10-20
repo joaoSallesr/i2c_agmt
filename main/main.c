@@ -47,10 +47,20 @@ void print_agmt(icm20948_agmt_t agmt)
 	float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_250DPS;
     float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_250DPS;
     float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_250DPS;
-  	ESP_LOGI(TAG, "Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+  	/*ESP_LOGI(TAG, "Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
 		acc_x, acc_y, acc_z,
 		gyr_x, gyr_y, gyr_z
-	);
+	);*/
+
+	/*ESP_LOGI(TAG, "%.6f, %.6f, %.6f", 
+		acc_x, acc_y, acc_z
+	);*/
+
+	printf("%f", acc_x);
+	printf(", ");
+	printf("%f", acc_y);
+	printf(", ");
+	printf("%f", acc_z);
 }
 
 void app_main(void)
@@ -106,9 +116,9 @@ void app_main(void)
     /* loop */
     while(1)
 	{
-		vTaskDelay(100 / portTICK_PERIOD_MS);
+		vTaskDelay(20 / portTICK_PERIOD_MS);
 		
-		icm20948_agmt_t agmt; // = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0}};
+		icm20948_agmt_t agmt;
 
 		if (icm20948_get_agmt(&icm, &agmt) == ICM_20948_STAT_OK) {
 			print_agmt(agmt);
