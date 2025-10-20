@@ -17,7 +17,7 @@
 #define CALIBRATION_DELAY_MS 4
 
 #define ACC_SENSITIVITY_16G 2048.0f    // LSB/g for ±16g range
-#define GYRO_SENSITIVITY_2000DPS 16.4f // LSB/°/s for ±2000°/s range
+#define GYRO_SENSITIVITY_250DPS 131.0f // LSB/°/s for ±2000°/s range
 #define G 9.80665f
 
 /* i2c bus configuration */
@@ -44,10 +44,10 @@ void print_agmt(icm20948_agmt_t agmt)
     float acc_y = agmt.acc.axes.y / ACC_SENSITIVITY_16G;
     float acc_z = agmt.acc.axes.z / ACC_SENSITIVITY_16G;
 
-	float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_2000DPS;
-    float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_2000DPS;
-    float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_2000DPS;
-  	ESP_LOGI(TAG, "Acc[g]: [ %.2f, %.2f, %.2f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+	float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_250DPS;
+    float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_250DPS;
+    float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_250DPS;
+  	ESP_LOGI(TAG, "Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
 		acc_x, acc_y, acc_z,
 		gyr_x, gyr_y, gyr_z
 	);
@@ -96,7 +96,7 @@ void app_main(void)
 	// Set full scale ranges for both acc and gyr
 	icm20948_fss_t myfss;
 	myfss.a = GPM_16;   // (icm20948_accel_config_fs_sel_e)
-	myfss.g = DPS_2000; // (icm20948_gyro_config_1_fs_sel_e)
+	myfss.g = DPS_250; // (icm20948_gyro_config_1_fs_sel_e)
 
 	// Now wake the sensor up
 	icm20948_sleep(&icm, false);
