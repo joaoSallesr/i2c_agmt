@@ -49,14 +49,19 @@ void print_agmt(icm20948_agmt_t agmt)
 	float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
     float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_500DPS;
     float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_500DPS;
-  	ESP_LOGI(TAG, "Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+	
+  	ESP_LOGI(TAG, "UNCAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
 		acc_x, acc_y, acc_z,
 		gyr_x, gyr_y, gyr_z
-	);	printf("%f", acc_x);
-	printf(", ");
-	printf("%f", acc_y);
-	printf(", ");
-	printf("%f", acc_z);
+	);
+
+	accel_cal(acc_x, acc_y, acc_z);
+	gyro_cal(gyr_x, gyr_y,gyr_z);
+
+  	ESP_LOGI(TAG, "CAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+		acc_x, acc_y, acc_z,
+		gyr_x, gyr_y, gyr_z
+	);
 }
 
 void calibrate_accel(icm20948_agmt_t agmt)
@@ -104,6 +109,42 @@ void calibrate_gyro(icm20948_agmt_t agmt)
 	float bias_z = (sum_z/NUM_GYRO_READS);
 	
 	printf("    .gyro_bias_offset = {.x = %f, .y = %f, .z = %f}\n", bias_x, bias_y, bias_z);
+}
+
+void accel_cal(float acc_x, float acc_y, float acc_z)
+{
+    // accel calibration bias
+    float accel_bias[3] =
+    {   0.0,    0.0,    0.0};
+
+    // accel calibration scale factor
+    float accel_scale[3][3] =
+    {   {   1.0,    0.0,    0.0},
+        {   0.0,    1.0,    0.0},
+        {   0.0,    0.0,    1.0}
+    };
+    float x_bias = acc_x - accel_bias[0];
+    float y_bias = acc_y - accel_bias[1];
+    float z_bias = acc_z - accel_bias[2];
+
+    float x_cal = x_bias * accel_scale[0][0] + y_bias * accel_scale[0][1] + z_bias * accel_scale[0][2];
+    float y_cal = x_bias * accel_scale[1][0] + y_bias * accel_scale[1][1] + z_bias * accel_scale[1][2];
+    float z_cal =x_bias * accel_scale[2][0] + y_bias * accel_scale[2][1] + z_bias * accel_scale[2][2];
+
+    acc_x = x_cal;
+    acc_y = y_cal;
+    acc_z = z_cal;
+}
+
+void gyro_cal(float gyr_x, float gyr_y, float gyr_z)
+{
+    // gyro calibration bias
+    float gyro_bias[3] =
+    {   0.0,    0.0,    0.0,};
+
+    gyr_x = gyr_x - gyro_bias[0];
+    gyr_y = gyr_y - gyro_bias[1];
+    gyr_z = gyr_z - gyro_bias[2];
 }
 
 void app_main(void)
