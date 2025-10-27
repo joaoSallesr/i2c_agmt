@@ -21,7 +21,7 @@ import serial
 # global variables
 MAX_MEAS = 200  # max number of readings in the session, so that we don't create an infinite loop
 AVG_MEAS = 25  # for each reading, take this many measurements and average them
-SER_PORT = 'COM4'  # serial port the device is connected to
+SER_PORT = '/dev/ttyACM0'  # serial port the device is connected to
 SER_BAUD = 115200  # serial port baud rate
 FILENAME = os.path.join(os.getcwd(), 'acceldata.txt')  # output file
 
@@ -87,7 +87,9 @@ def RecordDataPt(ser: SerialPort) -> tuple:
     for _ in range(AVG_MEAS):
         # read data
         try:
-            data = ser.Read().split(',')
+            raw_data = ser.Read()
+            data_str = raw_data.split("i2c_agmt: ")[1]
+            data = data_str.split(',')
             ax_now = float(data[0])
             ay_now = float(data[1])
             az_now = float(data[2])

@@ -39,78 +39,6 @@ icm0948_config_i2c_t icm_config = {
 	.i2c_addr = ICM_20948_I2C_ADDR_AD0
 };
 
-
-void print_agmt(icm20948_agmt_t agmt)
-{
-	float acc_x = agmt.acc.axes.x / ACC_SENSITIVITY_16G;
-    float acc_y = agmt.acc.axes.y / ACC_SENSITIVITY_16G;
-    float acc_z = agmt.acc.axes.z / ACC_SENSITIVITY_16G;
-
-	float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
-    float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_500DPS;
-    float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_500DPS;
-	
-  	ESP_LOGI(TAG, "UNCAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
-		acc_x, acc_y, acc_z,
-		gyr_x, gyr_y, gyr_z
-	);
-
-	accel_cal(acc_x, acc_y, acc_z);
-	gyro_cal(gyr_x, gyr_y,gyr_z);
-
-  	ESP_LOGI(TAG, "CAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
-		acc_x, acc_y, acc_z,
-		gyr_x, gyr_y, gyr_z
-	);
-}
-
-void calibrate_accel(icm20948_agmt_t agmt)
-{
-	float acc_x = agmt.acc.axes.x / ACC_SENSITIVITY_16G;
-    float acc_y = agmt.acc.axes.y / ACC_SENSITIVITY_16G;
-    float acc_z = agmt.acc.axes.z / ACC_SENSITIVITY_16G;
-
-	printf("%f", acc_x);
-	printf(", ");
-	printf("%f", acc_y);
-	printf(", ");
-	printf("%f", acc_z);
-}
-
-void calibrate_gyro(icm20948_agmt_t agmt)
-{
-	float sum_x = 0.0f;
-	float sum_y = 0.0f;
-	float sum_z = 0.0f;
-	int cont = 0;
-
-	for (int i = 0; i < NUM_GYRO_READS; i ++)
-	{
-		float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
-    	float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_500DPS;
-    	float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_500DPS;
-
-		sum_x += gyr_x;
-		sum_y += gyr_y;
-		sum_z += gyr_z;
-
-		cont++;
-		
-    	// Make the WDT happy
-    	if (i % 100 == 0)
-      		vTaskDelay(0);
-
-    	pause();
-	}
-
-
-	float bias_x = (sum_x/NUM_GYRO_READS);
-	float bias_y = (sum_y/NUM_GYRO_READS);
-	float bias_z = (sum_z/NUM_GYRO_READS);
-	
-	printf("    .gyro_bias_offset = {.x = %f, .y = %f, .z = %f}\n", bias_x, bias_y, bias_z);
-}
-
 void accel_cal(float acc_x, float acc_y, float acc_z)
 {
     // accel calibration bias
@@ -145,6 +73,81 @@ void gyro_cal(float gyr_x, float gyr_y, float gyr_z)
     gyr_x = gyr_x - gyro_bias[0];
     gyr_y = gyr_y - gyro_bias[1];
     gyr_z = gyr_z - gyro_bias[2];
+}
+
+void print_agmt(icm20948_agmt_t agmt)
+{
+	float acc_x = agmt.acc.axes.x / ACC_SENSITIVITY_16G;
+    float acc_y = agmt.acc.axes.y / ACC_SENSITIVITY_16G;
+    float acc_z = agmt.acc.axes.z / ACC_SENSITIVITY_16G;
+
+	float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
+    float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_500DPS;
+    float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_500DPS;
+	
+  	ESP_LOGI(TAG, "UNCAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+		acc_x, acc_y, acc_z,
+		gyr_x, gyr_y, gyr_z
+	);
+
+	accel_cal(acc_x, acc_y, acc_z);
+	gyro_cal(gyr_x, gyr_y,gyr_z);
+
+  	ESP_LOGI(TAG, "CAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+		acc_x, acc_y, acc_z,
+		gyr_x, gyr_y, gyr_z
+	);
+}
+
+void calibrate_accel(icm20948_agmt_t agmt)
+{
+	float acc_x = agmt.acc.axes.x / ACC_SENSITIVITY_16G;
+    float acc_y = agmt.acc.axes.y / ACC_SENSITIVITY_16G;
+    float acc_z = agmt.acc.axes.z / ACC_SENSITIVITY_16G;
+
+	//printf("%f", acc_x);
+	//printf(", ");
+	//printf("%f", acc_y);
+	//printf(", ");
+	//printf("%f", acc_z);
+
+	ESP_LOGI(TAG,"%.4f, %.4f, %.4f ",
+		acc_x, acc_y, acc_z
+	);
+}
+
+void calibrate_gyro(icm20948_agmt_t agmt)
+{
+	float sum_x = 0.0f;
+	float sum_y = 0.0f;
+	float sum_z = 0.0f;
+	int cont = 0;
+
+	for (int i = 0; i < NUM_GYRO_READS; i ++)
+	{
+		float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
+    	float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_500DPS;
+    	float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_500DPS;
+
+		sum_x += gyr_x;
+		sum_y += gyr_y;
+		sum_z += gyr_z;
+
+		cont++;
+		
+    	// Make the WDT happy
+    	if (i % 100 == 0)
+      		vTaskDelay(0);
+
+    	pause();
+	}
+
+
+	float bias_x = (sum_x/NUM_GYRO_READS);
+	float bias_y = (sum_y/NUM_GYRO_READS);
+	float bias_z = (sum_z/NUM_GYRO_READS);
+	
+	printf("    .gyro_bias_offset = {.x = %f, .y = %f, .z = %f}\n", bias_x, bias_y, bias_z);
 }
 
 void app_main(void)
@@ -205,8 +208,8 @@ void app_main(void)
 		icm20948_agmt_t agmt;
 
 		if (icm20948_get_agmt(&icm, &agmt) == ICM_20948_STAT_OK) {
-			print_agmt(agmt);
-			//calibrate_accel(agmt);
+			//print_agmt(agmt);
+			calibrate_accel(agmt);
 			//calibrate_gyro(agmt);
 		} else {
 			ESP_LOGE(TAG, "Uh oh");
