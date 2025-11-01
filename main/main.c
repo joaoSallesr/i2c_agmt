@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <math.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -39,64 +40,64 @@ icm0948_config_i2c_t icm_config = {
 	.i2c_addr = ICM_20948_I2C_ADDR_AD0
 };
 
-void accel_cal(float acc_x, float acc_y, float acc_z)
+void accel_cal(float *acc_x, float *acc_y, float *acc_z)
 {
     // accel calibration bias
     float accel_bias[3] =
-    {   0.0,    0.0,    0.0};
+    {   -0.002649,    -0.022053,    -0.016130};
 
     // accel calibration scale factor
     float accel_scale[3][3] =
-    {   {   1.0,    0.0,    0.0},
-        {   0.0,    1.0,    0.0},
-        {   0.0,    0.0,    1.0}
+    {   {   0.999121,    0.000381,    0.000610},
+        {   0.000381,    0.998036,    -0.000622},
+        {   0.000610,    -0.000622,    0.983066}
     };
-    float x_bias = acc_x - accel_bias[0];
-    float y_bias = acc_y - accel_bias[1];
-    float z_bias = acc_z - accel_bias[2];
+    float x_bias = *acc_x - accel_bias[0];
+    float y_bias = *acc_y - accel_bias[1];
+    float z_bias = *acc_z - accel_bias[2];
 
     float x_cal = x_bias * accel_scale[0][0] + y_bias * accel_scale[0][1] + z_bias * accel_scale[0][2];
     float y_cal = x_bias * accel_scale[1][0] + y_bias * accel_scale[1][1] + z_bias * accel_scale[1][2];
-    float z_cal =x_bias * accel_scale[2][0] + y_bias * accel_scale[2][1] + z_bias * accel_scale[2][2];
+    float z_cal = x_bias * accel_scale[2][0] + y_bias * accel_scale[2][1] + z_bias * accel_scale[2][2];
 
-    acc_x = x_cal;
-    acc_y = y_cal;
-    acc_z = z_cal;
+    *acc_x = x_cal;
+    *acc_y = y_cal;
+    *acc_z = z_cal;
 }
 
-void gyro_cal(float gyr_x, float gyr_y, float gyr_z)
+void gyro_cal(float *gyr_x, float *gyr_y, float *gyr_z)
 {
     // gyro calibration bias
     float gyro_bias[3] =
     {   0.0,    0.0,    0.0,};
 
-    gyr_x = gyr_x - gyro_bias[0];
-    gyr_y = gyr_y - gyro_bias[1];
-    gyr_z = gyr_z - gyro_bias[2];
+    *gyr_x = *gyr_x - gyro_bias[0];
+    *gyr_y = *gyr_y - gyro_bias[1];
+    *gyr_z = *gyr_z - gyro_bias[2];
 }
 
 void print_agmt(icm20948_agmt_t agmt)
 {
-	float acc_x = agmt.acc.axes.x / ACC_SENSITIVITY_16G;
+    float acc_x = agmt.acc.axes.x / ACC_SENSITIVITY_16G;
     float acc_y = agmt.acc.axes.y / ACC_SENSITIVITY_16G;
     float acc_z = agmt.acc.axes.z / ACC_SENSITIVITY_16G;
 
-	float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
+    float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
     float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_500DPS;
     float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_500DPS;
-	
-  	ESP_LOGI(TAG, "UNCAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
-		acc_x, acc_y, acc_z,
-		gyr_x, gyr_y, gyr_z
-	);
+    
+    ESP_LOGI(TAG, "UNCAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+        acc_x, acc_y, acc_z,
+        gyr_x, gyr_y, gyr_z
+    );
 
-	accel_cal(acc_x, acc_y, acc_z);
-	gyro_cal(gyr_x, gyr_y,gyr_z);
+    accel_cal(&acc_x, &acc_y, &acc_z);
+    gyro_cal(&gyr_x, &gyr_y, &gyr_z);
 
-  	ESP_LOGI(TAG, "CAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
-		acc_x, acc_y, acc_z,
-		gyr_x, gyr_y, gyr_z
-	);
+    ESP_LOGI(TAG, "CAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+        acc_x, acc_y, acc_z,
+        gyr_x, gyr_y, gyr_z
+    );
 }
 
 void calibrate_accel(icm20948_agmt_t agmt)
@@ -111,7 +112,10 @@ void calibrate_accel(icm20948_agmt_t agmt)
 	//printf(", ");
 	//printf("%f", acc_z);
 
-	ESP_LOGI(TAG,"%.4f, %.4f, %.4f ",
+	//accel_cal(&acc_x, &acc_y, &acc_z);
+	//float mag = sqrt((acc_x*acc_x) + (acc_y*acc_y) + (acc_z*acc_z));
+
+	ESP_LOGI(TAG,"%.4f, %.4f, %.4f",
 		acc_x, acc_y, acc_z
 	);
 }
