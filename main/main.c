@@ -44,13 +44,13 @@ void accel_cal(float *acc_x, float *acc_y, float *acc_z)
 {
     // accel calibration bias
     float accel_bias[3] =
-    {   -0.002649,    -0.022053,    -0.016130};
+    {-0.002522, -0.020485, -0.019608};
 
     // accel calibration scale factor
     float accel_scale[3][3] =
-    {   {   0.999121,    0.000381,    0.000610},
-        {   0.000381,    0.998036,    -0.000622},
-        {   0.000610,    -0.000622,    0.983066}
+    {   {1.000599, 0.000295, 0.001966},
+        {0.000295, 0.998947, 0.000291},
+        {0.001966, 0.000291, 0.984282}
     };
     float x_bias = *acc_x - accel_bias[0];
     float y_bias = *acc_y - accel_bias[1];
@@ -85,17 +85,23 @@ void print_agmt(icm20948_agmt_t agmt)
     float gyr_x = agmt.gyr.axes.x / GYRO_SENSITIVITY_500DPS;
     float gyr_y = agmt.gyr.axes.y / GYRO_SENSITIVITY_500DPS;
     float gyr_z = agmt.gyr.axes.z / GYRO_SENSITIVITY_500DPS;
+
+	float mag = sqrt((acc_x*acc_x) + (acc_y*acc_y) + (acc_z*acc_z));
     
-    ESP_LOGI(TAG, "UNCAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+    ESP_LOGI(TAG, "UNCAL, Acc[g]: [ %.4f, %.4f, %.4f ] Mag: [ %.4f] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
         acc_x, acc_y, acc_z,
+		mag,
         gyr_x, gyr_y, gyr_z
     );
 
     accel_cal(&acc_x, &acc_y, &acc_z);
     gyro_cal(&gyr_x, &gyr_y, &gyr_z);
 
-    ESP_LOGI(TAG, "CAL, Acc[g]: [ %.4f, %.4f, %.4f ] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
+	mag = sqrt((acc_x*acc_x) + (acc_y*acc_y) + (acc_z*acc_z));
+
+    ESP_LOGI(TAG, "CAL, Acc[g]: [ %.4f, %.4f, %.4f ] Mag: [ %.4f] Gyr[deg/s]: [%.2f, %.2f, %.2f]", 
         acc_x, acc_y, acc_z,
+		mag,
         gyr_x, gyr_y, gyr_z
     );
 }
@@ -113,10 +119,10 @@ void calibrate_accel(icm20948_agmt_t agmt)
 	//printf("%f", acc_z);
 
 	//accel_cal(&acc_x, &acc_y, &acc_z);
-	//float mag = sqrt((acc_x*acc_x) + (acc_y*acc_y) + (acc_z*acc_z));
+	float mag = sqrt((acc_x*acc_x) + (acc_y*acc_y) + (acc_z*acc_z));
 
-	ESP_LOGI(TAG,"%.4f, %.4f, %.4f",
-		acc_x, acc_y, acc_z
+	ESP_LOGI(TAG,"%.4f, %.4f, %.4f, %4f",
+		acc_x, acc_y, acc_z, mag
 	);
 }
 
@@ -138,12 +144,6 @@ void calibrate_gyro(icm20948_agmt_t agmt)
 		sum_z += gyr_z;
 
 		cont++;
-		
-    	// Make the WDT happy
-    	if (i % 100 == 0)
-      		vTaskDelay(0);
-
-    	pause();
 	}
 
 
@@ -212,8 +212,8 @@ void app_main(void)
 		icm20948_agmt_t agmt;
 
 		if (icm20948_get_agmt(&icm, &agmt) == ICM_20948_STAT_OK) {
-			//print_agmt(agmt);
-			calibrate_accel(agmt);
+			print_agmt(agmt);
+			//calibrate_accel(agmt);
 			//calibrate_gyro(agmt);
 		} else {
 			ESP_LOGE(TAG, "Uh oh");
